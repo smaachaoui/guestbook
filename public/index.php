@@ -108,6 +108,22 @@ switch ($page) {
     $users = $userModel->findAll();
     break;
 
+    case 'guestbook':
+    // Je récupère les commentaires visibles pour l'affichage
+    $comments = $guestbookController->getVisibleComments();
+
+    // Je traite l'ajout d'un commentaire si un formulaire est soumis
+    $result = $guestbookController->addComment();
+    if ($result['success']) {
+        $success = $result['message'];
+        // Je recharge les commentaires après insertion
+        $comments = $guestbookController->getVisibleComments();
+    } else {
+        // Je n'affiche l'erreur que si elle existe
+        $error = $result['error'];
+    }
+    break;
+
     case 'admin_guestbook':
     // Je vérifie si l'utilisateur est admin
     if (!$authController->isAdmin()) {
@@ -137,6 +153,7 @@ switch ($page) {
     // Je récupère les commentaires pour l'administration
     $adminComments = $guestbookController->getAllCommentsForAdmin();
     break;
+    
 }
 
 // Je génère un token CSRF pour les formulaires
