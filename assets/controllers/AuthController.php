@@ -361,4 +361,223 @@ class AuthController
     {
         return $_SESSION['user'] ?? null;
     }
+
+
+    /**
+     * Je crée un utilisateur depuis l'administration
+     *
+     * @return array
+     */
+    public function createUserAdmin(): array
+    {
+        // Je vérifie que l'utilisateur est admin
+        if (!$this->isAdmin()) {
+            return ['success' => false, 'error' => 'Accès refusé.'];
+        }
+
+        // Je vérifie que la requête est en POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return ['success' => false, 'error' => null];
+        }
+
+        // Je vérifie le token CSRF
+        $csrfToken = $_POST['csrf_token'] ?? '';
+        if (!$this->verifyCsrfToken($csrfToken)) {
+            return ['success' => false, 'error' => 'Session expirée, veuillez réessayer.'];
+        }
+
+        // Je récupère et nettoie les données
+        $username = trim($_POST['username'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $role = $_POST['role'] ?? 'user';
+
+        // Je valide les champs
+        if (empty($username) || empty($email) || empty($password) || empty($role)) {
+            return ['success' => false, 'error' => 'Tous les champs sont obligatoires.'];
+        }
+
+        if (strlen($username) < 3 || strlen($username) > 50) {
+            return ['success' => false, 'error' => 'Le nom d\'utilisateur doit contenir entre 3 et 50 caractères.'];
+        }
+
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+            return ['success' => false, 'error' => 'Le nom d\'utilisateur ne peut contenir que des lettres, chiffres et underscores.'];
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'error' => 'L\'email n\'est pas valide.'];
+        }
+
+        if (strlen($password) < 8) {
+            return ['success' => false, 'error' => 'Le mot de passe doit contenir au moins 8 caractères.'];
+        }
+
+        if (!in_array($role, ['user', 'admin'])) {
+            return ['success' => false, 'error' => 'Rôle invalide.'];
+        }
+
+        // Je vérifie unicité email/username
+        if ($this->userModel->emailExists($email)) {
+            return ['success' => false, 'error' => 'Cet email est déjà utilisé.'];
+        }
+
+        if ($this->userModel->usernameExists($username)) {
+            return ['success' => false, 'error' => 'Ce nom d\'utilisateur est déjà utilisé.'];
+        }
+
+        // Je crée l'utilisateur
+        if ($this->userModel->create($username, $email, $password, $role)) {
+            return ['success' => true, 'message' => 'Utilisateur créé avec succès.'];
+        }
+
+        return ['success' => false, 'error' => 'Une erreur est survenue lors de la création de l\'utilisateur.'];
+    }
+
+    /**
+     * Je supprime un utilisateur depuis l'administration
+     *
+     * @return array
+     */
+    public function deleteUserAdmin(): array
+    {
+        // Je vérifie que l'utilisateur est admin
+        if (!$this->isAdmin()) {
+            return ['success' => false, 'error' => 'Accès refusé.'];
+        }
+
+        // Je vérifie que la requête est en POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return ['success' => false, 'error' => null];
+        }
+
+        // Je vérifie le token CSRF
+        $csrfToken = $_POST['csrf_token'] ?? '';
+        if (!$this->verifyCsrfToken($csrfToken)) {
+            return ['success' => false, 'error' => 'Session expirée, veuillez réessayer.'];
+        }
+
+        // Je récupère l'id
+        $userId = (int) ($_POST['user_id'] ?? 0);
+        if ($userId <= 0) {
+            return ['success' => false, 'error' => 'ID utilisateur invalide.'];
+        }
+
+        // Je protège contre la suppression de soi-même (évite de se verrouiller hors admin)
+        $currentUser = $this->getCurrentUser();
+        if ($currentUser !== null && (int)$currentUser['id'] === $userId) {
+            return ['success' => false, 'error' => 'Vous ne pouvez pas supprimer votre propre compte.'];
+        }
+
+        // Je vérifie que l'utilisateur existe
+        $user = $this->userModel->findById($userId);
+        if ($user === null) {
+            return ['success' => false, 'error' => 'Utilisateur introuvable.'];
+        }
+
+        // Je supprime
+        if ($this->userModel->delete($userId)) {
+            return ['success' => true, 'message' => 'Utilisateur supprimé avec succès.'];
+        }
+
+        return ['success' => false, 'error' => 'Une erreur est survenue lors de la suppression.'];
+    }
+
+    /**
+     * Je mets à jour un utilisateur depuis l'administration
+     * (préparé pour l'étape "Modifier")
+     *
+     * @return array
+     */
+    public function updateUserAdmin(): array
+    {
+        // Je vérifie que l'utilisateur est admin
+        if (!$this->isAdmin()) {
+            return ['success' => false, 'error' => 'Accès refusé.'];
+        }
+
+        // Je vérifie que la requête est en POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return ['success' => false, 'error' => null];
+        }
+
+        // Je vérifie le token CSRF
+        $csrfToken = $_POST['csrf_token'] ?? '';
+        if (!$this->verifyCsrfToken($csrfToken)) {
+            return ['success' => false, 'error' => 'Session expirée, veuillez réessayer.'];
+        }
+
+        $userId = (int) ($_POST['user_id'] ?? 0);
+        $username = trim($_POST['username'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $role = $_POST['role'] ?? 'user';
+
+        // Je protège le rôle de mon propre compte (évite de se retirer les droits admin)
+        $currentUser = $this->getCurrentUser();
+        if ($currentUser !== null && (int)$currentUser['id'] === $userId && $role !== 'admin') {
+            return ['success' => false, 'error' => 'Vous ne pouvez pas retirer le rôle admin à votre propre compte.'];
+        }
+
+
+        // password optionnel (si tu veux permettre le reset)
+        $password = $_POST['password'] ?? '';
+        $password = trim($password) !== '' ? $password : null;
+
+        if ($userId <= 0) {
+            return ['success' => false, 'error' => 'ID utilisateur invalide.'];
+        }
+
+        // Je vérifie que l'utilisateur existe
+        $existingUser = $this->userModel->findById($userId);
+        if ($existingUser === null) {
+            return ['success' => false, 'error' => 'Utilisateur introuvable.'];
+        }
+
+
+        if (empty($username) || empty($email) || empty($role)) {
+            return ['success' => false, 'error' => 'Tous les champs (hors mot de passe) sont obligatoires.'];
+        }
+
+        if (strlen($username) < 3 || strlen($username) > 50) {
+            return ['success' => false, 'error' => 'Le nom d\'utilisateur doit contenir entre 3 et 50 caractères.'];
+        }
+
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+            return ['success' => false, 'error' => 'Le nom d\'utilisateur ne peut contenir que des lettres, chiffres et underscores.'];
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'error' => 'L\'email n\'est pas valide.'];
+        }
+
+        if (!in_array($role, ['user', 'admin'])) {
+            return ['success' => false, 'error' => 'Rôle invalide.'];
+        }
+
+        if ($password !== null && strlen($password) < 8) {
+            return ['success' => false, 'error' => 'Le mot de passe doit contenir au moins 8 caractères.'];
+        }
+
+        // Unicité
+        if ($this->userModel->emailExistsExceptId($email, $userId)) {
+            return ['success' => false, 'error' => 'Cet email est déjà utilisé.'];
+        }
+
+        if ($this->userModel->usernameExistsExceptId($username, $userId)) {
+            return ['success' => false, 'error' => 'Ce nom d\'utilisateur est déjà utilisé.'];
+        }
+
+        /**
+         * Ici, je délègue la mise à jour au modèle.
+         * On va ajouter la méthode dans User.php à l'étape suivante :
+         * - updateAdminUser(int $id, string $username, string $email, string $role, ?string $password): bool
+         */
+        if ($this->userModel->updateAdminUser($userId, $username, $email, $role, $password)) {
+            return ['success' => true, 'message' => 'Utilisateur mis à jour avec succès.'];
+        }
+
+        return ['success' => false, 'error' => 'Une erreur est survenue lors de la mise à jour.'];
+    }
+
+
 }
