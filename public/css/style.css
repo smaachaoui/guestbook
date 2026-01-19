@@ -33,11 +33,9 @@ footer a:hover {
 
 /* Je définis la taille du logo dans la navbar */
 .navbar-logo {
-    height: 70px;
-    width: auto;
-    background-color: #fff;
-    padding: 0.30rem;
-    border-radius: 50px;
+    width: 70px;
+    height: auto;
+    padding: 0.20rem;
     object-fit: contain;
 
 }
