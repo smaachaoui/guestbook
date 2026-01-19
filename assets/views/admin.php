@@ -388,7 +388,6 @@
                     </div>
                 </div>
             <?php endif; ?>
-
         </section>
     </div>
 </div>
