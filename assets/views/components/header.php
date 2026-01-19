@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Je définis le titre de la page -->
-    <title><?= $pageTitle ?? 'Module de connexion' ?></title>
+    <title><?= $pageTitle ?? 'Livre or' ?></title>
     
     <!-- J'importe Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -23,8 +23,8 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-black">
         <div class="container">
             <!-- Je crée le logo cliquable -->
-            <a class="navbar-brand" href="index.php">
-                <img src="img/logo.png" alt="un logo qui représente un mandalorian issu de l'univers Star Wars" class="navbar-logo">
+            <a class="navbar-brand d-flex mx-auto" href="index.php">
+                <img src="img/open-book.png" alt="un logo qui représente un livre ouvert" class="navbar-logo">
             </a>
             
             <!-- Je crée le bouton burger pour mobile -->

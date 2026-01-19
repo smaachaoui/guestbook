@@ -5,7 +5,7 @@
 <footer class="bg-black text-white py-4 mt-auto">
     <div class="container text-center">
         <!-- J'affiche le copyright avec l'année dynamique -->
-        <p class="mb-0">&copy; <?= date('Y') ?> Seifeddine Maachaoui | Module de connexion | Tous droits réservés</p>
+        <p class="mb-0">&copy; <?= date('Y') ?> Seifeddine Maachaoui | Livre d'or | Tous droits réservés</p>
     </div>
 </footer>
 
