@@ -410,4 +410,68 @@ class User
             return false;
         }
     }
+
+    /**
+     * Je mets à jour un utilisateur depuis l'administration
+     * (username, email, role, et éventuellement mot de passe)
+     *
+     * @param int         $id       ID de l'utilisateur
+     * @param string      $username Nom d'utilisateur
+     * @param string      $email    Email
+     * @param string      $role     Rôle (user|admin)
+     * @param string|null $password Mot de passe en clair (optionnel)
+     *
+     * @return bool
+     */
+    public function updateAdminUser(int $id, string $username, string $email, string $role, ?string $password = null): bool
+    {
+        // Je vérifie que la connexion existe
+        if ($this->db === null) {
+            return false;
+        }
+
+        // Je vérifie que le rôle est valide
+        if (!in_array($role, ['user', 'admin'])) {
+            return false;
+        }
+
+        try {
+            // Si password est fourni, je le hash et je le mets à jour
+            if ($password !== null) {
+                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+                $sql = 'UPDATE users 
+                        SET username = :username, email = :email, role = :role, password = :password
+                        WHERE id = :id';
+
+                $stmt = $this->db->prepare($sql);
+
+                return $stmt->execute([
+                    ':username' => $username,
+                    ':email' => $email,
+                    ':role' => $role,
+                    ':password' => $hashedPassword,
+                    ':id' => $id
+                ]);
+            }
+
+            // Sinon, je mets à jour sans toucher au password
+            $sql = 'UPDATE users 
+                    SET username = :username, email = :email, role = :role
+                    WHERE id = :id';
+
+            $stmt = $this->db->prepare($sql);
+
+            return $stmt->execute([
+                ':username' => $username,
+                ':email' => $email,
+                ':role' => $role,
+                ':id' => $id
+            ]);
+        } catch (PDOException $e) {
+            error_log('Erreur update admin user : ' . $e->getMessage());
+            return false;
+        }
+    }
+
 }
