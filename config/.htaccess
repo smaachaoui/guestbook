@@ -1,0 +1,3 @@
+# Je bloque l'accès direct à tous les fichiers de ce dossier
+Order Allow,Deny
+Deny from all

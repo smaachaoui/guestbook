@@ -1,0 +1,43 @@
+/* Je configure le body pour avoir un footer sticky */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Je fais en sorte que le main prenne tout l'espace disponible */
+main {
+    flex: 1;
+}
+
+/* Je mets les liens de navigation en blanc */
+.navbar-dark .nav-link {
+    color: #fff;
+}
+
+/* Je gère le hover des liens de navigation */
+.navbar-dark .nav-link:hover {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* Je mets les liens du footer en blanc */
+footer a {
+    color: #fff;
+    text-decoration: none;
+}
+
+/* Je gère le hover des liens du footer */
+footer a:hover {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* Je définis la taille du logo dans la navbar */
+.navbar-logo {
+    height: 70px;
+    width: auto;
+    background-color: #fff;
+    padding: 0.30rem;
+    border-radius: 50px;
+    object-fit: contain;
+
+}
