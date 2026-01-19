@@ -137,6 +137,48 @@ class GuestbookComment
     }
 
     /**
+     * Je récupère un commentaire par son ID pour l'administration
+     *
+     * @param int $id ID du commentaire
+     *
+     * @return array|null
+     */
+    public function findByIdForAdmin(int $id): ?array
+    {
+        // Je vérifie que la connexion existe
+        if ($this->db === null) {
+            return null;
+        }
+
+        try {
+            $sql = 'SELECT 
+                        gc.id,
+                        gc.user_id,
+                        gc.title,
+                        gc.message,
+                        gc.is_visible,
+                        gc.created_at,
+                        u.username,
+                        u.email
+                    FROM guestbook_comments gc
+                    INNER JOIN users u ON u.id = gc.user_id
+                    WHERE gc.id = :id
+                    LIMIT 1';
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':id' => $id]);
+
+            $comment = $stmt->fetch();
+
+            return $comment ?: null;
+        } catch (PDOException $e) {
+            error_log('Erreur findByIdForAdmin : ' . $e->getMessage());
+            return null;
+        }
+    }
+
+
+    /**
      * Je supprime un commentaire par son ID
      *
      * @param int $id ID du commentaire
@@ -193,6 +235,42 @@ class GuestbookComment
     }
 
     /**
+     * Je modifie un commentaire depuis l'administration
+     *
+     * @param int         $id      ID du commentaire
+     * @param string|null $title   Nouveau titre (null si vide)
+     * @param string      $message Nouveau message
+     *
+     * @return bool
+     */
+    public function updateAdmin(int $id, ?string $title, string $message): bool
+    {
+        // Je vérifie que la connexion existe
+        if ($this->db === null) {
+            return false;
+        }
+
+        try {
+            // Je prépare la requête de mise à jour
+            $sql = 'UPDATE guestbook_comments 
+                    SET title = :title, message = :message
+                    WHERE id = :id';
+
+            $stmt = $this->db->prepare($sql);
+
+            return $stmt->execute([
+                ':title' => $title,
+                ':message' => $message,
+                ':id' => $id
+            ]);
+        } catch (PDOException $e) {
+            error_log('Erreur update commentaire admin : ' . $e->getMessage());
+            return false;
+        }
+    }
+
+
+    /**
      * Je compte le nombre total de commentaires
      *
      * @return int
@@ -215,4 +293,51 @@ class GuestbookComment
             return 0;
         }
     }
+
+    /**
+     * Je compte le nombre total de commentaires visibles
+     *
+     * @return int
+     */
+    public function countVisible(): int
+    {
+        if ($this->db === null) {
+            return 0;
+        }
+
+        try {
+            $sql = 'SELECT COUNT(*) as total FROM guestbook_comments WHERE is_visible = 1';
+            $stmt = $this->db->query($sql);
+            $result = $stmt->fetch();
+
+            return (int) ($result['total'] ?? 0);
+        } catch (PDOException $e) {
+            error_log('Erreur comptage commentaires visibles : ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Je compte le nombre total de commentaires masqués
+     *
+     * @return int
+     */
+    public function countHidden(): int
+    {
+        if ($this->db === null) {
+            return 0;
+        }
+
+        try {
+            $sql = 'SELECT COUNT(*) as total FROM guestbook_comments WHERE is_visible = 0';
+            $stmt = $this->db->query($sql);
+            $result = $stmt->fetch();
+
+            return (int) ($result['total'] ?? 0);
+        } catch (PDOException $e) {
+            error_log('Erreur comptage commentaires masqués : ' . $e->getMessage());
+            return 0;
+        }
+    }
+
 }
