@@ -112,11 +112,18 @@ switch ($page) {
 
     // Je prépare les données selon la section
     if ($section === 'dashboard') {
-        $userModel = $authController->getUserModel();
-        $totalUsers = $userModel->countAll();
-        $totalAdmins = $userModel->countAdmins();
-        $newUsers = $userModel->countNewUsers();
+    $userModel = $authController->getUserModel();
+
+    $totalUsers = $userModel->countAll();
+    $newUsers = $userModel->countNewUsers();
+
+    // Stats livre d'or
+    $guestbookModel = new GuestbookComment();
+    $totalGuestbookMessages = $guestbookModel->countAll();
+    $totalGuestbookVisible = $guestbookModel->countVisible();
+    $totalGuestbookHidden = $guestbookModel->countHidden();
     }
+
 
     if ($section === 'users') {
         $userModel = $authController->getUserModel();
@@ -154,6 +161,19 @@ switch ($page) {
             }
         }
 
+        // Si on est en mode édition, je récupère l'utilisateur à éditer
+        $userToEdit = null;
+        if (isset($_GET['edit'])) {
+            $editId = (int) $_GET['edit'];
+            if ($editId > 0) {
+                $userToEdit = $userModel->findById($editId);
+                if ($userToEdit === null) {
+                    $error = $error ?? 'Utilisateur introuvable.';
+                }
+            }
+        }
+
+
         $users = $userModel->findAll();
     }
 
@@ -188,6 +208,19 @@ switch ($page) {
 
         // Je récupère les commentaires pour l'administration
         $adminComments = $guestbookController->getAllCommentsForAdmin();
+
+        // Si on est en mode édition, je récupère le commentaire à éditer
+        $commentToEdit = null;
+        if (isset($_GET['edit'])) {
+            $editId = (int) $_GET['edit'];
+            if ($editId > 0) {
+                $commentToEdit = $guestbookController->getCommentForAdmin($editId);
+                if ($commentToEdit === null) {
+                    $error = $error ?? 'Commentaire introuvable.';
+                }
+            }
+        }
+
     }
 
     break;
