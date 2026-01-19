@@ -127,6 +127,28 @@ class GuestbookController
     }
 
     /**
+     * Je récupère un commentaire par ID pour l'administration
+     *
+     * @param int $id
+     *
+     * @return array|null
+     */
+    public function getCommentForAdmin(int $id): ?array
+    {
+        // Je vérifie que l'utilisateur est admin
+        if (!$this->isAdmin()) {
+            return null;
+        }
+
+        if ($id <= 0) {
+            return null;
+        }
+
+        return $this->commentModel->findByIdForAdmin($id);
+    }
+
+
+    /**
      * Je supprime un commentaire en administration
      *
      * @return array Tableau contenant le statut et le message
@@ -202,6 +224,64 @@ class GuestbookController
 
         return ['success' => true, 'message' => 'Visibilité mise à jour avec succès.'];
     }
+
+    /**
+     * Je modifie un commentaire en administration
+     *
+     * @return array Tableau contenant le statut et le message
+     */
+    public function editCommentAdmin(): array
+    {
+        // Je vérifie que l'utilisateur est admin
+        if (!$this->isAdmin()) {
+            return ['success' => false, 'error' => 'Accès refusé.'];
+        }
+
+        // Je vérifie que la requête est en POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return ['success' => false, 'error' => null];
+        }
+
+        // Je vérifie le token CSRF
+        $csrfToken = $_POST['csrf_token'] ?? '';
+        if (!$this->verifyCsrfToken($csrfToken)) {
+            return ['success' => false, 'error' => 'Session expirée, veuillez réessayer.'];
+        }
+
+        // Je récupère l'ID du commentaire
+        $id = (int) ($_POST['comment_id'] ?? 0);
+        if ($id <= 0) {
+            return ['success' => false, 'error' => 'Identifiant invalide.'];
+        }
+
+        // Je récupère et nettoie les données
+        $title = trim($_POST['title'] ?? '');
+        $message = trim($_POST['message'] ?? '');
+
+        // Je normalise le titre
+        if ($title === '') {
+            $title = null;
+        }
+
+        // Je valide
+        $validation = $this->validateComment($title, $message);
+        if (!$validation['valid']) {
+            return ['success' => false, 'error' => $validation['error']];
+        }
+
+        /**
+         * Je mets à jour via le modèle.
+         * On va ajouter la méthode dans GuestbookComment.php à l'étape suivante :
+         * - updateAdmin(int $id, ?string $title, string $message): bool
+         */
+        $ok = $this->commentModel->updateAdmin($id, $title, $message);
+        if (!$ok) {
+            return ['success' => false, 'error' => 'Une erreur est survenue lors de la mise à jour.'];
+        }
+
+        return ['success' => true, 'message' => 'Commentaire modifié avec succès.'];
+    }
+
 
     /**
      * Je vérifie si l'utilisateur est connecté
