@@ -39,6 +39,10 @@
                         <a class="nav-link" href="index.php">Accueil</a>
                     </li>
 
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.php?page=guestbook">Livre d'or</a>
+                    </li>
+
                     <?php if (isset($_SESSION['user'])): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="index.php?page=profile">Profil</a>
