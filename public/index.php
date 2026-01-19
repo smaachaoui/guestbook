@@ -13,15 +13,22 @@ session_start();
 require_once '../config/database.php';
 require_once '../assets/models/User.php';
 require_once '../assets/controllers/AuthController.php';
+require_once '../assets/models/GuestbookComment.php';
+require_once '../assets/controllers/GuestbookController.php';
+
 
 // J'instancie le contrôleur d'authentification
 $authController = new AuthController();
+
+// J'instancie le contrôleur du livre d'or
+$guestbookController = new GuestbookController();
+
 
 // Je récupère la page demandée via l'URL
 $page = $_GET['page'] ?? 'home';
 
 // Je définis les pages autorisées
-$allowedPages = ['home', 'login', 'register', 'profile', 'edit_profile', 'admin', 'logout'];
+$allowedPages = ['home', 'login', 'register', 'profile', 'edit_profile', 'admin', 'guestbook', 'admin_guestbook', 'logout'];
 
 // Je vérifie si la page demandée existe
 if (!in_array($page, $allowedPages)) {
@@ -99,6 +106,36 @@ switch ($page) {
     $totalAdmins = $userModel->countAdmins();
     $newUsers = $userModel->countNewUsers();
     $users = $userModel->findAll();
+    break;
+
+    case 'admin_guestbook':
+    // Je vérifie si l'utilisateur est admin
+    if (!$authController->isAdmin()) {
+        header('Location: index.php?page=login');
+        exit;
+    }
+
+    // Je traite les actions admin (suppression ou visibilité)
+    if (isset($_POST['action']) && $_POST['action'] === 'delete') {
+        $result = $guestbookController->deleteCommentAdmin();
+        if ($result['success']) {
+            $success = $result['message'];
+        } else {
+            $error = $result['error'];
+        }
+    }
+
+    if (isset($_POST['action']) && $_POST['action'] === 'toggle_visibility') {
+        $result = $guestbookController->toggleVisibilityAdmin();
+        if ($result['success']) {
+            $success = $result['message'];
+        } else {
+            $error = $result['error'];
+        }
+    }
+
+    // Je récupère les commentaires pour l'administration
+    $adminComments = $guestbookController->getAllCommentsForAdmin();
     break;
 }
 
