@@ -28,7 +28,7 @@ $guestbookController = new GuestbookController();
 $page = $_GET['page'] ?? 'home';
 
 // Je définis les pages autorisées
-$allowedPages = ['home', 'login', 'register', 'profile', 'edit_profile', 'admin', 'guestbook', 'admin_guestbook', 'logout'];
+$allowedPages = ['home', 'login', 'register', 'profile', 'edit_profile', 'admin', 'guestbook', 'logout'];
 
 // Je vérifie si la page demandée existe
 if (!in_array($page, $allowedPages)) {
@@ -100,60 +100,98 @@ switch ($page) {
         header('Location: index.php?page=login');
         exit;
     }
-    // Je prépare les données pour la vue admin
-    $userModel = $authController->getUserModel();
-    $totalUsers = $userModel->countAll();
-    $totalAdmins = $userModel->countAdmins();
-    $newUsers = $userModel->countNewUsers();
-    $users = $userModel->findAll();
-    break;
 
-    case 'guestbook':
-    // Je récupère les commentaires visibles pour l'affichage
-    $comments = $guestbookController->getVisibleComments();
+    // Je récupère la section demandée
+    $section = $_GET['section'] ?? 'dashboard';
 
-    // Je traite l'ajout d'un commentaire si un formulaire est soumis
-    $result = $guestbookController->addComment();
-    if ($result['success']) {
-        $success = $result['message'];
-        // Je recharge les commentaires après insertion
-        $comments = $guestbookController->getVisibleComments();
-    } else {
-        // Je n'affiche l'erreur que si elle existe
-        $error = $result['error'];
-    }
-    break;
-
-    case 'admin_guestbook':
-    // Je vérifie si l'utilisateur est admin
-    if (!$authController->isAdmin()) {
-        header('Location: index.php?page=login');
-        exit;
+    // Je limite les sections autorisées
+    $allowedSections = ['dashboard', 'users', 'guestbook'];
+    if (!in_array($section, $allowedSections)) {
+        $section = 'dashboard';
     }
 
-    // Je traite les actions admin (suppression ou visibilité)
-    if (isset($_POST['action']) && $_POST['action'] === 'delete') {
-        $result = $guestbookController->deleteCommentAdmin();
-        if ($result['success']) {
-            $success = $result['message'];
-        } else {
-            $error = $result['error'];
+    // Je prépare les données selon la section
+    if ($section === 'dashboard') {
+        $userModel = $authController->getUserModel();
+        $totalUsers = $userModel->countAll();
+        $totalAdmins = $userModel->countAdmins();
+        $newUsers = $userModel->countNewUsers();
+    }
+
+    if ($section === 'users') {
+        $userModel = $authController->getUserModel();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+
+            // CREATE user
+            if ($_POST['action'] === 'create_user') {
+                $result = $authController->createUserAdmin(); 
+                if ($result['success']) {
+                    $success = $result['message'];
+                } else {
+                    $error = $result['error'];
+                }
+            }
+
+            // UPDATE user
+            if ($_POST['action'] === 'update_user') {
+                $result = $authController->updateUserAdmin(); 
+                if ($result['success']) {
+                    $success = $result['message'];
+                } else {
+                    $error = $result['error'];
+                }
+            }
+
+            // DELETE user
+            if ($_POST['action'] === 'delete_user') {
+                $result = $authController->deleteUserAdmin(); 
+                if ($result['success']) {
+                    $success = $result['message'];
+                } else {
+                    $error = $result['error'];
+                }
+            }
         }
+
+        $users = $userModel->findAll();
     }
 
-    if (isset($_POST['action']) && $_POST['action'] === 'toggle_visibility') {
-        $result = $guestbookController->toggleVisibilityAdmin();
-        if ($result['success']) {
-            $success = $result['message'];
-        } else {
-            $error = $result['error'];
+    if ($section === 'guestbook') {
+        // Je traite les actions admin (suppression ou visibilité)
+        if (isset($_POST['action']) && $_POST['action'] === 'delete_comment') {
+            $result = $guestbookController->deleteCommentAdmin();
+            if ($result['success']) {
+                $success = $result['message'];
+            } else {
+                $error = $result['error'];
+            }
         }
+
+        if (isset($_POST['action']) && $_POST['action'] === 'toggle_comment_visibility') {
+            $result = $guestbookController->toggleVisibilityAdmin();
+            if ($result['success']) {
+                $success = $result['message'];
+            } else {
+                $error = $result['error'];
+            }
+        }
+
+        if (isset($_POST['action']) && $_POST['action'] === 'edit_comment') {
+            $result = $guestbookController->editCommentAdmin();
+            if ($result['success']) {
+                $success = $result['message'];
+            } else {
+                $error = $result['error'];
+            }
+        }
+
+        // Je récupère les commentaires pour l'administration
+        $adminComments = $guestbookController->getAllCommentsForAdmin();
     }
 
-    // Je récupère les commentaires pour l'administration
-    $adminComments = $guestbookController->getAllCommentsForAdmin();
     break;
-    
+
 }
 
 // Je génère un token CSRF pour les formulaires
