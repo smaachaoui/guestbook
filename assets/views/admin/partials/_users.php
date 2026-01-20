@@ -82,25 +82,28 @@
                                     <td><?= date('d/m/Y H:i', strtotime($user['created_at'])) ?></td>
                                     <td class="text-end">
                                         <div class="d-flex justify-content-end gap-2">
-                                            <!-- EDIT: on câblera via une UI (modal ou page) à l’étape suivante -->
-                                            <a
+                                            <button
+                                                type="button"
                                                 class="btn btn-sm btn-outline-primary"
-                                                href="index.php?page=admin&section=users&edit=<?= (int)$user['id'] ?>"
-                                            >
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalEditUser"
+                                                data-user-id="<?= (int)$user['id'] ?>"
+                                                data-user-username="<?= htmlspecialchars($user['username'], ENT_QUOTES) ?>"
+                                                data-user-email="<?= htmlspecialchars($user['email'], ENT_QUOTES) ?>"
+                                                data-user-role="<?= htmlspecialchars($user['role'], ENT_QUOTES) ?>">
                                                 Modifier
-                                            </a>
+                                            </button>
 
-                                            <!-- DELETE -->
-                                            <form
-                                                method="POST"
-                                                action="index.php?page=admin&section=users"
-                                                onsubmit="return confirm('Confirmer la suppression ?');"
-                                            >
-                                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
-                                                <input type="hidden" name="action" value="delete_user">
-                                                <input type="hidden" name="user_id" value="<?= (int)$user['id'] ?>">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
-                                            </form>
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalDeleteUser"
+                                                data-user-id="<?= (int)$user['id'] ?>"
+                                                data-user-username="<?= htmlspecialchars($user['username'], ENT_QUOTES) ?>">
+                                                Supprimer
+                                            </button>
+
                                         </div>
                                     </td>
                                 </tr>
@@ -111,4 +114,9 @@
             </div>
         </div>
     </div>
+
+    <?php
+    require_once __DIR__ . '/modals/_user_modals.php';
+    ?>
+
 <?php endif; ?>

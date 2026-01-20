@@ -94,6 +94,26 @@ switch ($page) {
     break;
 
 
+    case 'guestbook':
+    // Si formulaire envoyé : j'essaie d'ajouter un commentaire
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $result = $guestbookController->addComment();
+
+        if ($result['success']) {
+            $success = $result['message'] ?? null;
+        } else {
+            $error = $result['error'] ?? null;
+        }
+    }
+
+    // Dans tous les cas, je récupère les messages visibles pour l'affichage public
+    $comments = $guestbookController->getVisibleComments();
+
+    break;
+
+
+
+
     case 'admin':
     // Je vérifie si l'utilisateur est admin
     if (!$authController->isAdmin()) {
@@ -237,6 +257,7 @@ $pageTitles = [
     'register' => 'Inscription',
     'profile' => 'Mon Profil',
     'edit_profile' => 'Modifier mon Profil',
+    'guestbook' => 'Livre d\'or',
     'admin' => 'Administration'
 ];
 $pageTitle = $pageTitles[$page] ?? 'Auth Module';

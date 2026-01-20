@@ -3,56 +3,15 @@
         <div class="card-header bg-dark text-white">
             <h5 class="mb-0">Administration du livre d'or</h5>
         </div>
+
         <div class="card-body">
-
-            <?php if (!empty($commentToEdit)): ?>
-                <div class="card mb-3">
-                    <div class="card-header bg-dark text-white">
-                        <strong>Modifier le commentaire #<?= (int)$commentToEdit['id'] ?></strong>
-                    </div>
-                    <div class="card-body">
-                        <form method="POST" action="index.php?page=admin&section=guestbook">
-                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
-                            <input type="hidden" name="action" value="edit_comment">
-                            <input type="hidden" name="comment_id" value="<?= (int)$commentToEdit['id'] ?>">
-
-                            <div class="mb-3">
-                                <label class="form-label">Titre (optionnel)</label>
-                                <input
-                                    type="text"
-                                    name="title"
-                                    class="form-control"
-                                    maxlength="100"
-                                    value="<?= htmlspecialchars($commentToEdit['title'] ?? '') ?>"
-                                >
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Message</label>
-                                <textarea
-                                    name="message"
-                                    class="form-control"
-                                    rows="5"
-                                    required
-                                ><?= htmlspecialchars($commentToEdit['message'] ?? '') ?></textarea>
-                            </div>
-
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-dark">Enregistrer</button>
-                                <a class="btn btn-outline-secondary" href="index.php?page=admin&section=guestbook">Annuler</a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            <?php endif; ?>
-
             <?php if (empty($adminComments)): ?>
                 <div class="alert alert-secondary" role="alert">
                     Aucun commentaire à afficher.
                 </div>
             <?php else: ?>
 
-            <div class="table-responsive">
+                <div class="table-responsive">
                     <table class="table table-striped align-middle">
                         <thead>
                             <tr>
@@ -77,38 +36,42 @@
                                     <td class="text-end">
                                         <div class="d-flex justify-content-end gap-2">
 
-                                            <!-- EDIT: on câblera l’édition ensuite -->
-                                            <a
+                                            <!-- EDIT (MODAL) -->
+                                            <button
+                                                type="button"
                                                 class="btn btn-sm btn-outline-primary"
-                                                href="index.php?page=admin&section=guestbook&edit=<?= (int)$comment['id'] ?>"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalEditComment"
+                                                data-comment-id="<?= (int)$comment['id'] ?>"
+                                                data-comment-title="<?= htmlspecialchars(json_encode($comment['title'] ?? '', JSON_UNESCAPED_UNICODE), ENT_QUOTES) ?>"
+                                                data-comment-message="<?= htmlspecialchars(json_encode($comment['message'] ?? '', JSON_UNESCAPED_UNICODE), ENT_QUOTES) ?>"
+                                                data-comment-username="<?= htmlspecialchars(json_encode($comment['username'] ?? '', JSON_UNESCAPED_UNICODE), ENT_QUOTES) ?>"
                                             >
                                                 Modifier
-                                            </a>
+                                            </button>
 
-                                            <!-- TOGGLE VISIBILITY -->
-                                            <form method="POST" action="index.php?page=admin&section=guestbook">
+                                            <!-- TOGGLE VISIBILITY (POST direct) -->
+                                            <form method="POST" action="index.php?page=admin&section=guestbook" class="d-inline">
                                                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                                                 <input type="hidden" name="action" value="toggle_comment_visibility">
                                                 <input type="hidden" name="comment_id" value="<?= (int)$comment['id'] ?>">
-                                                <input type="hidden" name="is_visible" value="<?= (int)$comment['is_visible'] === 1 ? 0 : 1 ?>">
+
                                                 <button type="submit" class="btn btn-sm btn-outline-primary">
                                                     <?= (int)$comment['is_visible'] === 1 ? 'Masquer' : 'Afficher' ?>
                                                 </button>
                                             </form>
 
-                                            <!-- DELETE -->
-                                            <form
-                                                method="POST"
-                                                action="index.php?page=admin&section=guestbook"
-                                                onsubmit="return confirm('Confirmer la suppression ?');"
+                                            <!-- DELETE (MODAL) -->
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalDeleteComment"
+                                                data-comment-id="<?= (int)$comment['id'] ?>"
+                                                data-comment-username="<?= htmlspecialchars(json_encode($comment['username'] ?? '', JSON_UNESCAPED_UNICODE), ENT_QUOTES) ?>"
                                             >
-                                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
-                                                <input type="hidden" name="action" value="delete_comment">
-                                                <input type="hidden" name="comment_id" value="<?= (int)$comment['id'] ?>">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                    Supprimer
-                                                </button>
-                                            </form>
+                                                Supprimer
+                                            </button>
 
                                         </div>
                                     </td>
@@ -117,6 +80,12 @@
                         </tbody>
                     </table>
                 </div>
+
+                <?php
+                // Inclusion des modals commentaires (séparées)
+                require_once __DIR__ . '/modals/_guestbook_modals.php';
+                ?>
+
             <?php endif; ?>
         </div>
     </div>

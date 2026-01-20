@@ -100,4 +100,85 @@ document.addEventListener('DOMContentLoaded', function() {
         return regex.test(email);
     }
 
+    // --- USER: EDIT ---
+    const modalEditUser = document.getElementById('modalEditUser');
+        if (modalEditUser) {
+        modalEditUser.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (!button) return;
+
+            const id = button.getAttribute('data-user-id') || '';
+            const username = button.getAttribute('data-user-username') || '';
+            const email = button.getAttribute('data-user-email') || '';
+            const role = button.getAttribute('data-user-role') || 'user';
+
+            document.getElementById('modalEditUser_id').value = id;
+            document.getElementById('modalEditUser_username').value = username;
+            document.getElementById('modalEditUser_email').value = email;
+            document.getElementById('modalEditUser_role').value = role;
+
+            // Password: toujours vide, on ne pré-remplit jamais un mot de passe
+            document.getElementById('modalEditUser_password').value = '';
+        });
+    }
+
+    // --- USER: DELETE ---
+    const modalDeleteUser = document.getElementById('modalDeleteUser');
+        if (modalDeleteUser) {
+        modalDeleteUser.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (!button) return;
+
+            const id = button.getAttribute('data-user-id') || '';
+            const username = button.getAttribute('data-user-username') || '';
+
+            document.getElementById('modalDeleteUser_id').value = id;
+            document.getElementById('modalDeleteUser_username').textContent = username;
+        });
+    }
+
+    // --- COMMENT: EDIT ---
+const modalEditComment = document.getElementById('modalEditComment');
+if (modalEditComment) {
+  modalEditComment.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget;
+    if (!button) return;
+
+    const id = button.getAttribute('data-comment-id') || '';
+    const titleRaw = button.getAttribute('data-comment-title') || '""';
+    const messageRaw = button.getAttribute('data-comment-message') || '""';
+    const usernameRaw = button.getAttribute('data-comment-username') || '""';
+
+    let title = '', message = '', username = '';
+    try { title = JSON.parse(titleRaw) || ''; } catch (e) {}
+    try { message = JSON.parse(messageRaw) || ''; } catch (e) {}
+    try { username = JSON.parse(usernameRaw) || ''; } catch (e) {}
+
+    document.getElementById('modalEditComment_id').value = id;
+    document.getElementById('modalEditComment_title').value = title;
+    document.getElementById('modalEditComment_message').value = message;
+    document.getElementById('modalEditComment_username').textContent = username;
+  });
+}
+
+    // --- COMMENT: DELETE ---
+    const modalDeleteComment = document.getElementById('modalDeleteComment');
+        if (modalDeleteComment) {
+        modalDeleteComment.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            if (!button) return;
+
+            const id = button.getAttribute('data-comment-id') || '';
+            const usernameRaw = button.getAttribute('data-comment-username') || '""';
+
+            let username = '';
+            try { username = JSON.parse(usernameRaw) || ''; } catch (e) {}
+
+            document.getElementById('modalDeleteComment_id').value = id;
+            document.getElementById('modalDeleteComment_username').textContent = username;
+        });
+    }
+
+
+
 });
